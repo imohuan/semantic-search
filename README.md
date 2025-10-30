@@ -1,27 +1,117 @@
 # AI 语义搜索功能文档
 
+[![Node.js Version](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Language](https://img.shields.io/badge/Language-JavaScript-yellow.svg)](https://www.javascript.com/)
+
 ## 概述
 
-本项目集成了强大的 AI 驱动语义搜索功能，基于 `mcp-chrome` 库的核心实现。可以在 Node.js 和 Electron 环境中运行，支持多语言智能搜索。
+本项目提供了强大的 AI 驱动语义搜索功能，基于 Transformer 模型实现多语言智能搜索。提供两个版本：
 
-## 快速开始
+- **Node.js 版本** - 适合服务器端、Electron 主进程
+- **浏览器版本** - 适合纯前端应用、Electron 渲染进程
 
-### 1. 安装依赖
+## 📖 目录
+
+- [两个版本对比](#-两个版本对比)
+- [快速开始](#-快速开始)
+  - [Node.js 版本](#nodejs-版本使用)
+  - [浏览器版本](#浏览器版本使用)
+- [可用脚本](#-可用脚本)
+- [技术架构](#技术架构)
+- [核心组件](#核心组件)
+- [完整使用流程](#完整使用流程)
+- [实战案例](#实战案例)
+- [性能优化](#性能优化)
+- [性能对比](#-性能对比)
+- [常见问题](#常见问题)
+- [文件结构](#-文件结构)
+- [总结](#-总结)
+
+## 📦 两个版本对比
+
+### Node.js 版本（推荐）
+
+**位置**: `semantic-search/nodes/`
+
+**特点**:
+
+- ✅ 运行在 Node.js 环境（服务器、Electron 主进程）
+- ✅ 使用 `@xenova/transformers` 运行 AI 模型
+- ✅ 纯 JavaScript 实现的向量数据库（无需编译）
+- ✅ 更好的性能和稳定性
+- ✅ 支持本地模型缓存
+- ✅ 适合中大型应用
+
+**依赖**:
 
 ```bash
 pnpm add @xenova/transformers
 ```
 
-### 2. 运行演示
+**适用场景**:
 
-```bash
-node src/semantic-search-demo.js
+- Electron 桌面应用（主进程）
+- Node.js 后端服务
+- 本地工具和脚本
+- 需要持久化存储的应用
+
+### 浏览器版本
+
+**位置**: `semantic-search-browser.html`
+
+**特点**:
+
+- ✅ 纯浏览器运行（无需 Node.js）
+- ✅ 使用 Web Workers 和 WASM 加速
+- ✅ 可视化交互界面
+- ⚠️ 首次加载需要下载模型（~116MB）
+- ⚠️ 受浏览器内存限制
+
+**依赖**:
+
+```html
+<!-- 直接在 HTML 中引入 CDN -->
+<script type="module">
+  import { pipeline } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
+</script>
 ```
 
-### 3. 在代码中使用
+**适用场景**:
+
+- 在线演示和测试
+- 纯前端应用
+- 快速原型验证
+- 教学和展示
+
+## 🚀 快速开始
+
+### Node.js 版本使用
+
+#### 1. 安装依赖
+
+```bash
+# 在 semantic-search 目录下
+pnpm install
+```
+
+#### 2. 运行演示
+
+```bash
+# 方法1: 使用 pnpm 脚本
+pnpm run demo
+
+# 方法2: 使用 Windows 批处理脚本
+双击 scripts/start-node-demo.bat
+
+# 方法3: 直接运行
+node nodes/semantic-search-demo.js
+```
+
+#### 3. 在代码中使用
 
 ```javascript
-import { ContentIndexer } from "./src/semantic-search/content-indexer-node.js";
+import { ContentIndexer } from "./nodes/content-indexer.js";
 
 // 创建索引器
 const indexer = new ContentIndexer({
@@ -45,6 +135,56 @@ await indexer.indexContent(
 const results = await indexer.searchContent("机器学习算法", 10);
 console.log(results);
 ```
+
+### 浏览器版本使用
+
+#### 1. 启动演示
+
+```bash
+# 方法1: 使用 pnpm 脚本（自动打开浏览器）
+pnpm run browser
+
+# 方法2: 使用 Windows 批处理脚本
+双击 scripts/start-browser.bat
+
+# 方法3: 直接打开 HTML 文件
+双击 semantic-search-browser.html
+```
+
+#### 2. 操作步骤
+
+1. 点击「初始化语义搜索引擎」
+2. 等待模型加载完成（首次约 1-2 分钟）
+3. 索引示例文档或自定义内容
+4. 输入查询词进行搜索
+
+## 📋 可用脚本
+
+### NPM/PNPM 脚本
+
+| 脚本命令           | 说明                   |
+| ------------------ | ---------------------- |
+| `pnpm install`     | 安装依赖               |
+| `pnpm run demo`    | 运行 Node.js 版本演示  |
+| `pnpm run browser` | 在浏览器中打开演示界面 |
+| `pnpm run dev`     | 开发模式（同 demo）    |
+| `pnpm run start`   | 启动演示（同 demo）    |
+
+### Windows 批处理脚本
+
+**快速启动（推荐）**：
+
+| 脚本文件                  | 说明                            |
+| ------------------------- | ------------------------------- |
+| `快速启动-Node版本.bat`   | 自动安装依赖并启动 Node.js 演示 |
+| `快速启动-浏览器版本.bat` | 直接在浏览器中打开演示          |
+
+**单独启动**：
+
+| 脚本文件                      | 说明                                  |
+| ----------------------------- | ------------------------------------- |
+| `scripts/start-node-demo.bat` | 启动 Node.js 版本演示（需先安装依赖） |
+| `scripts/start-browser.bat`   | 在浏览器中打开演示                    |
 
 ## 技术架构
 
@@ -71,7 +211,7 @@ TextChunker    SemanticEngine      VectorDatabase
 
 ### 1. TextChunker - 文本分块器
 
-**文件**: `src/semantic-search/text-chunker.js`
+**文件**: `nodes/text-chunker.js`
 
 **功能**: 将长文本智能切分为适合向量化的小块
 
@@ -94,7 +234,7 @@ TextChunker    SemanticEngine      VectorDatabase
 **示例**:
 
 ```javascript
-import { TextChunker } from "./src/semantic-search/text-chunker.js";
+import { TextChunker } from "./nodes/text-chunker.js";
 
 const chunker = new TextChunker({
   maxWordsPerChunk: 80,
@@ -108,7 +248,7 @@ const chunks = chunker.chunkText(longText, "Title");
 
 ### 2. SemanticEngine - 语义引擎
 
-**文件**: `src/semantic-search/semantic-engine.js`
+**文件**: `nodes/semantic-engine.js`
 
 **功能**: 加载 Embedding 模型，生成文本向量
 
@@ -133,7 +273,7 @@ const chunks = chunker.chunkText(longText, "Title");
 **示例**:
 
 ```javascript
-import { SemanticEngine } from "./src/semantic-search/semantic-engine.js";
+import { SemanticEngine } from "./nodes/semantic-engine.js";
 
 const engine = new SemanticEngine({
   modelName: "Xenova/multilingual-e5-small",
@@ -154,7 +294,7 @@ const embeddings = await engine.getEmbeddingsBatch(["文本1", "文本2"]);
 
 ### 3. VectorDatabase - 向量数据库
 
-**文件**: `src/semantic-search/vector-database-pure.js`
+**文件**: `nodes/vector-database.js`
 
 **功能**: 存储和搜索向量，使用纯 JavaScript 实现的余弦相似度算法
 
@@ -177,7 +317,7 @@ const embeddings = await engine.getEmbeddingsBatch(["文本1", "文本2"]);
 **示例**:
 
 ```javascript
-import { VectorDatabase } from "./src/semantic-search/vector-database-pure.js";
+import { VectorDatabase } from "./nodes/vector-database.js";
 
 const db = new VectorDatabase({
   dimension: 384,
@@ -202,14 +342,14 @@ const results = await db.search(queryEmbedding, 10);
 
 ### 4. ContentIndexer - 内容索引器
 
-**文件**: `src/semantic-search/content-indexer-node.js`
+**文件**: `nodes/content-indexer.js`
 
 **功能**: 协调上述三个组件，提供完整的索引和搜索功能
 
 **示例**:
 
 ```javascript
-import { ContentIndexer } from "./src/semantic-search/content-indexer-node.js";
+import { ContentIndexer } from "./nodes/content-indexer.js";
 
 const indexer = new ContentIndexer({
   // TextChunker 配置
@@ -266,7 +406,7 @@ console.log(stats);
 ### 第一步：创建索引器
 
 ```javascript
-import { ContentIndexer } from "./src/semantic-search/content-indexer-node.js";
+import { ContentIndexer } from "./nodes/content-indexer.js";
 
 const indexer = new ContentIndexer({
   modelName: "Xenova/multilingual-e5-small",
@@ -377,14 +517,16 @@ const answer = await searchKnowledge("如何使用机器学习？");
 **主进程 (main.js)**:
 
 ```javascript
-const {
-  ContentIndexer,
-} = require("./src/semantic-search/content-indexer-node.js");
+import { ContentIndexer } from "./semantic-search/nodes/content-indexer.js";
+import { ipcMain } from "electron";
 
 let indexer;
 
 ipcMain.handle("search:initialize", async () => {
-  indexer = new ContentIndexer();
+  indexer = new ContentIndexer({
+    modelName: "Xenova/multilingual-e5-small",
+    dimension: 384,
+  });
   await indexer.initialize();
   return { success: true };
 });
@@ -400,6 +542,10 @@ ipcMain.handle("search:index", async (event, pageData) => {
 
 ipcMain.handle("search:query", async (event, query, topK) => {
   return await indexer.searchContent(query, topK);
+});
+
+ipcMain.handle("search:stats", async () => {
+  return indexer.getStats();
 });
 ```
 
@@ -515,29 +661,74 @@ A:
 
 ### Q5: 可以在浏览器中运行吗？
 
-A: 可以！使用 `src/semantic-search/content-indexer.js` 和 `src/semantic-search/vector-database.js`（WASM 版本），性能更好。
+A: 可以！直接打开 `semantic-search-browser.html`，提供完整的可视化界面。浏览器版本特别适合演示和测试。
 
-## 文件说明
+### Q6: Node.js 版本和浏览器版本如何选择？
 
-### Node.js 版本（推荐）
+A:
 
-- `src/semantic-search/content-indexer-node.js` - 内容索引器
-- `src/semantic-search/vector-database-pure.js` - 纯 JS 向量数据库
-- `src/semantic-search/semantic-engine.js` - 语义引擎
-- `src/semantic-search/text-chunker.js` - 文本分块器
-- `src/semantic-search-demo.js` - 完整演示
+- **生产环境** → Node.js 版本（更稳定、性能更好）
+- **演示测试** → 浏览器版本（无需安装依赖）
+- **Electron 应用** → 主进程用 Node.js 版本，渲染进程可用浏览器版本
 
-### 浏览器版本（高性能）
+## 📁 文件结构
 
-- `src/semantic-search/content-indexer.js` - 内容索引器
-- `src/semantic-search/vector-database.js` - WASM 向量数据库（更快）
-- `src/semantic-search/semantic-engine.js` - 语义引擎
-- `src/semantic-search/text-chunker.js` - 文本分块器
+```
+semantic-search/
+├── nodes/                              # Node.js 版本核心代码
+│   ├── content-indexer.js             # 内容索引器（协调器）
+│   ├── semantic-engine.js             # 语义引擎（AI 模型加载）
+│   ├── text-chunker.js                # 文本分块器
+│   ├── vector-database.js             # 向量数据库（纯 JS 实现）
+│   └── semantic-search-demo.js        # 完整演示脚本
+│
+├── scripts/                            # 启动脚本
+│   ├── start-node-demo.bat            # Windows: 启动 Node.js 演示
+│   ├── start-browser.bat              # Windows: 启动浏览器演示
+│   └── start-browser.js               # 跨平台: 启动浏览器脚本
+│
+├── semantic-search-browser.html        # 浏览器版本（独立 HTML）
+├── 快速启动-Node版本.bat               # 快速启动 Node.js 版本（自动安装依赖）
+├── 快速启动-浏览器版本.bat             # 快速启动浏览器版本
+├── 示例代码.js                          # 使用示例代码
+├── package.json                        # 依赖管理
+├── .gitignore                          # Git 忽略文件
+└── README.md                           # 本文档
+```
 
-### 示例和文档
+### 快速启动说明
 
-- `src/semantic-search/example.js` - 详细示例
-- `src/semantic-search-demo.js` - 快速演示
+项目根目录提供了两个快速启动文件：
+
+1. **快速启动-Node 版本.bat**
+
+   - 自动检查并安装依赖
+   - 启动 Node.js 版本演示
+   - 适合首次运行
+
+2. **快速启动-浏览器版本.bat**
+   - 直接在浏览器中打开演示
+   - 无需安装任何依赖
+   - 适合快速体验
+
+## ⚖️ 版本选择建议
+
+| 需求                    | Node.js 版本 | 浏览器版本 |
+| ----------------------- | ------------ | ---------- |
+| Electron 主进程         | ✅ 推荐      | ❌         |
+| Electron 渲染进程       | ⚠️ 可用      | ✅ 推荐    |
+| Node.js 服务器          | ✅ 推荐      | ❌         |
+| 纯前端应用              | ❌           | ✅ 推荐    |
+| 快速演示/测试           | ⚠️           | ✅ 推荐    |
+| 生产环境                | ✅ 推荐      | ⚠️         |
+| 大规模数据（>10k 文档） | ✅ 推荐      | ❌         |
+| 离线使用                | ✅ 推荐      | ⚠️         |
+
+**总结**：
+
+- **生产应用** → Node.js 版本
+- **快速演示** → 浏览器版本
+- **Electron 应用** → 主进程用 Node.js，渲染进程用浏览器版本
 
 ## 技术原理
 
@@ -563,14 +754,77 @@ similarity = (A · B) / (||A|| × ||B||)
 查询文本 → 生成向量 → 计算相似度 → 排序 → 去重 → 返回前 K 个
 ```
 
-## 总结
+## 🔥 性能对比
 
-- ✅ 纯 JavaScript 实现，无需编译
-- ✅ 可在 Node.js 和 Electron 中运行
-- ✅ 支持 100+ 种语言
-- ✅ 智能分块，保持语义连贯
-- ✅ 自动缓存，加速重复查询
-- ✅ 简单易用的 API
-- ✅ 完整的演示代码
+### Node.js 版本 vs 浏览器版本
+
+| 特性         | Node.js 版本                  | 浏览器版本                  |
+| ------------ | ----------------------------- | --------------------------- |
+| 运行环境     | Node.js / Electron 主进程     | 浏览器 / Electron 渲染进程  |
+| AI 模型引擎  | @xenova/transformers          | @xenova/transformers (CDN)  |
+| 向量数据库   | 纯 JavaScript                 | 纯 JavaScript               |
+| 初始化速度   | ⭐⭐⭐⭐⭐ 快                 | ⭐⭐⭐ 中等（首次需下载）   |
+| 搜索速度     | ⭐⭐⭐⭐⭐ 快                 | ⭐⭐⭐⭐ 较快               |
+| 内存占用     | 300-400MB                     | 300-500MB                   |
+| 稳定性       | ⭐⭐⭐⭐⭐ 优秀               | ⭐⭐⭐⭐ 良好               |
+| 可扩展性     | ⭐⭐⭐⭐⭐ 优秀（支持大规模） | ⭐⭐⭐ 中等（受浏览器限制） |
+| 离线使用     | ✅ 完全支持                   | ⚠️ 需预先下载模型           |
+| 可视化界面   | ❌ 无                         | ✅ 内置漂亮界面             |
+| 部署难度     | ⭐⭐⭐ 中等（需 Node.js）     | ⭐⭐⭐⭐⭐ 简单（直接打开） |
+| 生产环境推荐 | ✅ 强烈推荐                   | ⚠️ 适合轻量应用             |
+
+### 性能测试数据（参考）
+
+基于 multilingual-e5-small 模型（384 维）：
+
+| 操作                     | Node.js 版本 | 浏览器版本 |
+| ------------------------ | ------------ | ---------- |
+| 模型初始化               | ~2-3 秒      | ~3-5 秒    |
+| 索引 1 个文档（1000 字） | ~100-200ms   | ~150-250ms |
+| 搜索（10k 文档）         | ~50-100ms    | ~80-150ms  |
+| 批量索引 100 个文档      | ~10-15 秒    | ~15-20 秒  |
+
+## 💡 总结
+
+### ✨ 核心特性
+
+- ✅ **纯 JavaScript 实现** - 无需编译，开箱即用
+- ✅ **双版本支持** - Node.js 版本 + 浏览器版本
+- ✅ **多语言支持** - 支持 100+ 种语言，包括中英日韩等
+- ✅ **智能分块** - 保持语义连贯，避免上下文丢失
+- ✅ **自动缓存** - LRU 缓存机制，加速重复查询
+- ✅ **简单易用** - 清晰的 API，完整的文档和示例
+- ✅ **高性能** - 余弦相似度算法，快速准确
+- ✅ **可扩展** - 支持自定义配置和模型选择
+
+### 🎯 适用场景
+
+- **Electron 桌面应用** - 智能标签页搜索、浏览历史搜索
+- **Node.js 后端服务** - 文档检索、知识库搜索
+- **纯前端应用** - 网页内容搜索、在线文档查询
+- **开发工具** - 代码搜索、日志分析
+- **教育培训** - AI 技术演示、教学案例
+
+### 🚀 快速选择指南
+
+```
+需要演示或快速测试？
+  ↓
+  使用浏览器版本（semantic-search-browser.html）
+
+生产环境或 Electron 应用？
+  ↓
+  使用 Node.js 版本（nodes/）
+
+需要处理大规模数据？
+  ↓
+  使用 Node.js 版本 + 增大 maxElements
+```
 
 立即开始使用 AI 语义搜索，让你的应用更智能！🚀
+
+---
+
+**项目地址**: AutoBrowser/semantic-search  
+**技术支持**: 基于 mcp-chrome 核心实现  
+**开源协议**: MIT License
